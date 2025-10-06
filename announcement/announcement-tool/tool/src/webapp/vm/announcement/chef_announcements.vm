@@ -538,12 +538,17 @@
 										#end
 									</th>
 									
-									##if ($!view != "view.bygroup") ## SAK-13850 The delete option must be there even when it is viewed by groups
-										#if ($allow_delete)
-											<th class="screenOnly" id="checkbox">
-												 $tlang.getString("gen.select")
-											</th>
-										#end
+								##if ($!view != "view.bygroup") 
+								#if ($allow_delete) 
+								<th class="screenOnly" id="checkbox"> 
+								$tlang.getString("gen.select") 
+								</th>
+								 #end
+
+										
+
+
+								
 									
 								</tr>
 							 #set ($rowCount=0)
@@ -625,23 +630,39 @@
 									#set ($origChannelRef = $service.channelReference($ref.Context,$ref.Container))
 
 									##if ($!view != "view.bygroup") ## SAK-13850 The delete option must be there even when it is viewed by groups
+										## Revisamos si el mensaje puede ser eliminado
 										#if ($channel.allowRemoveMessage($ann_item.Message))
 											#if ($origChannelRef.equals($channel.Reference))
-											<td headers="checkbox" class="screenOnly">
-												<label for ="check-$rowCount" class="skip">$tlang.getString("gen.selectremove") $formattedText.escapeHtml($ann_item.Header.subject)</label>
-												<input class="announcement-select-checkbox" title="$tlang.getString("gen.selectremove")" type="checkbox" id="check-$rowCount" name="selectedMembers" value="$ann_item.Reference" />
-											</td>
-											#end
-										#else
-									 		#if ($allow_delete)
-												#if ($origChannelRef.equals($channel.Reference))
-												<td valign="top" headers="checkbox" class="screenOnly">
-													<label for ="check-$rowCount" class="skip">$tlang.getString("gen.selectremove") $formattedText.escapeHtml($ann_item.Header.subject)</label>
-													<input title="$tlang.getString("gen.selectremove")" type="checkbox" id="check-$rowCount" name="selectedMembers" value="$ann_item.Reference" disabled="disabled"/>
+												<td headers="checkbox" class="screenOnly">
+													<label for="check-$rowCount" class="skip">$tlang.getString("gen.selectremove") $formattedText.escapeHtml($ann_item.Header.subject)</label>
+													<input class="announcement-select-checkbox" title="$tlang.getString("gen.selectremove")" type="checkbox" id="check-$rowCount" name="selectedMembers" value="$ann_item.Reference" />
 												</td>
+
+											#else 
+											<!-- Generamos una celda vacía si no se puede eliminar el anuncio -->
+												<td headers="checkbox" class="screenOnly">
+													&nbsp; <!-- Espacio no quebrable para mantener la celda visible -->
+												</td>
+											#end
+
+
+										#else
+											## Revisamos si se pueden eliminar los mensajes y si se deben mostrar como deshabilitados
+											#if ($allow_delete)
+												#if ($origChannelRef.equals($channel.Reference))
+													<td valign="top" headers="checkbox" class="screenOnly">
+														<label for="check-$rowCount" class="skip">$tlang.getString("gen.selectremove") $formattedText.escapeHtml($ann_item.Header.subject)</label>
+														<input title="$tlang.getString("gen.selectremove")" type="checkbox" id="check-$rowCount" name="selectedMembers" value="$ann_item.Reference" disabled="disabled"/>
+													</td>
 												#end
-											#end		
+											#else
+												<!-- Generamos una celda vacía si no se puede eliminar el anuncio -->
+												<td headers="checkbox" class="screenOnly">
+													&nbsp; <!-- Espacio no quebrable para mantener la celda visible -->
+												</td>
+											#end
 										#end
+
 								</tr>
 								#if ($displayOptions.isShowAnnouncementBody()) 
 									<tr>
