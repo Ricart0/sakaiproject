@@ -314,8 +314,15 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			title = rb.getString("sit_mywor_admin");
 		} else if (site.getId().equals("!admin")) {
 			title = rb.getString("sit_admin");
-		} else if (userId != null && site.getId().equals(siteService.getUserSiteId(userId))) {
-			title = rb.getString("sit_mywor");
+		} else if (siteService.isUserSite(site.getId())) {
+    try {
+        String ownerId = siteService.getSiteUserId(site.getId());
+        String ownerEid = userDirectoryService.getUserEid(ownerId);
+        title = rb.getString("sit_mywor") + " - " + ownerEid;
+    } catch (Exception e) {
+        log.warn("No se pudo obtener el usuario del site {}", site.getId(), e);
+        title = rb.getString("sit_mywor");
+    }
 		} else {
 			title = site.getTitle();
 		}
@@ -462,12 +469,24 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 			Collection<String> recentSiteIds = portalService.getRecentSites(userId);
 			// The current site is added to recent sites, except when it:
 			// is in recents, is in pinned, is excluded, is a user site
+			
+		System.out.println(portalService.getRecentSites(userId));
+			
+			
+
 			if (!recentSiteIds.contains(currentSiteId)
 					&& !pinnedSiteIds.contains(currentSiteId)
 					&& !excludedSiteIds.contains(currentSiteId)
-					&& !siteService.isUserSite(currentSiteId)) {
+					&& !currentSiteId.contains(userId)
+					) {
+				
+				System.out.println(userId);
+				System.out.println(currentSiteId);
 				portalService.addRecentSite(userId, currentSiteId);
 				recentSiteIds = portalService.getRecentSites(userId);
+				
+				System.out.println(portalService.getRecentSites(userId));
+				System.out.println(recentSiteIds.contains(currentSiteId));
 			}
 
 			Collection<String> filteredRecentSiteIds = recentSiteIds.stream()
@@ -622,6 +641,17 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 	public String getUserSpecificSiteTitle(Site site, boolean truncated, boolean escaped, List<String> siteProviders)
 	{
 		String retVal = siteService.getUserSpecificSiteTitle( site, userDirectoryService.getCurrentUser().getId(), siteProviders );
+
+		 if (siteService.isUserSite(site.getId())) {
+        try {
+            // Quitamos el "~" y buscamos el username (EID legible)
+            String userId = site.getId().substring(1);
+            String userEid = userDirectoryService.getUserEid(userId);
+            retVal = retVal + " - " + userEid;
+        } catch (Exception e) {
+            log.warn("No se pudo obtener el nombre de usuario para el site [{}]: {}", site.getId(), e.toString());
+        }
+    }
 		if( truncated )
 		{
 			retVal = formattedText.makeShortenedText( retVal, null, null, null );
@@ -653,14 +683,21 @@ public class PortalSiteHelperImpl implements PortalSiteHelper
 		m.put("isMyWorkspace", Boolean.valueOf(myWorkspaceSiteId != null
 		&& (s.getId().equals(myWorkspaceSiteId) || effectiveSite
 		.equals(myWorkspaceSiteId))));
-
+		
 		String siteTitleRaw;
 		if (s.getId().equals("~admin")) {
 			siteTitleRaw = rb.getString("sit_mywor_admin");
 		} else if (s.getId().equals("!admin")) {
 			siteTitleRaw = rb.getString("sit_admin");
 		} else if (myWorkspaceSiteId != null && (s.getId().equals(myWorkspaceSiteId) || effectiveSite.equals(myWorkspaceSiteId))) {
-			siteTitleRaw = rb.getString("sit_mywor");
+			 try {
+        String userId = s.getId().substring(1);
+        String userEid = userDirectoryService.getUserEid(userId);
+        siteTitleRaw = rb.getString("sit_mywor") + " - " + userEid; // Ej: Home - student002
+    } catch (Exception e) {
+        log.warn("No se pudo obtener el nombre de usuario para el site personal [{}]: {}", s.getId(), e.toString());
+        siteTitleRaw = rb.getString("sit_mywor");
+    }
 		} else {
 			siteTitleRaw = getUserSpecificSiteTitle(s, false, false, siteProviders);
 		}

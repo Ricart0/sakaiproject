@@ -807,7 +807,7 @@ public class PortalServiceImpl implements PortalService, Observer
 	@Override
 	public void addPinnedSite(final String userId, final String siteId, final boolean isPinned) {
 
-		if (StringUtils.isAnyBlank(userId, siteId) || siteService.isUserSite(siteId)) return;
+		if (StringUtils.isAnyBlank(userId, siteId)) return;
 
 		PinnedSite pin = pinnedSiteRepository.findByUserIdAndSiteId(userId, siteId)
 			.orElseGet(() -> new PinnedSite(userId, siteId));
@@ -866,7 +866,7 @@ public class PortalServiceImpl implements PortalService, Observer
 		List<String> sitesToPin = new ArrayList<>(siteIds);
 		List<String> sitesToUnpin = new ArrayList<>();
 		// user sites should never be pinned
-		sitesToPin.removeIf(siteService::isSpecialSite);
+		
 
 		List<String> currentPinned = getPinnedSites(userId);
 
@@ -975,7 +975,7 @@ public class PortalServiceImpl implements PortalService, Observer
 	public void addRecentSite(String userId, String siteId) {
 
 		if (StringUtils.isAnyBlank(userId, siteId)
-				|| siteService.isUserSite(siteId)
+				
 				|| SiteService.SITE_ERROR.equals(siteId)) {
 			return;
 		}
@@ -1088,9 +1088,7 @@ public class PortalServiceImpl implements PortalService, Observer
 		sitesToUnpin.forEach(id -> addPinnedSite(userId, id, false));
 
 		// Remove any special sites from pinned or recent
-		combinedSiteIds.stream()
-				.filter(siteService::isSpecialSite)
-				.forEach(sitesToRemove::add);
+		//combinedSiteIds.stream().filter(siteService::isSpecialSite).forEach(sitesToRemove::add);
 
 		removeSitesfromPinnedAndRecent(userId, new ArrayList<>(sitesToRemove));
 	}

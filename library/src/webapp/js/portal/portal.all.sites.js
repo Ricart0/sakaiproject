@@ -24,7 +24,7 @@ allsites.updatePinned = function (reorder) {
     method: "POST",
     body: data,
   })
-  .then(r => {
+   .then(r => {
 
     if (!r.ok) {
       throw new Error(`Network error while updating pinned sites at url ${url}`);
@@ -127,7 +127,7 @@ allsites.setup = function () {
       const originalState = self.dataset.pinnedState;
 
       if (originalState === 'myworkspace') {
-        // No unfavoriting your workspace!
+         //No unfavoriting your workspace!
         return;
       }
 
@@ -252,6 +252,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const newState = e.detail.pinned ? "pinned" : "unpinned";
     const button = document.querySelector(`#selectSite button.site-favorite-btn[data-site-id='${e.detail.siteId}']`);
+
+    
+
     allsites.updateButton(button, newState);
     allsites.setAllOrNoneStarStates();
 

@@ -19,10 +19,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.LinkedHashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +41,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -89,17 +89,30 @@ public class FavoritesHandler extends BasePortalHandler {
 		{
 			try {
 				String userFavoritesJSON = req.getParameter("userFavorites");
-				if (StringUtils.isNotBlank(userFavoritesJSON)) {
-					FavoriteSites favorites = FavoriteSites.fromJSON(userFavoritesJSON);
-					boolean reorder = StringUtils.equals("true", req.getParameter("reorder"));
-					saveUserFavorites(session.getUserId(), favorites, reorder);
-					res.setContentType(ContentType.APPLICATION_JSON.toString());
-				} else {
-					String siteId = req.getParameter("siteId");
-					boolean pinned = BooleanUtils.toBoolean(req.getParameter("pinned"));
-					portalService.addPinnedSite(session.getUserId(), siteId, pinned);
-				}
-				return END;
+				String userId = session.getUserId();
+
+            if (StringUtils.isNotBlank(userFavoritesJSON)) {
+                FavoriteSites favorites = FavoriteSites.fromJSON(userFavoritesJSON);
+                boolean reorder = StringUtils.equals("true", req.getParameter("reorder"));
+                saveUserFavorites(userId, favorites, reorder);
+
+                // 🔧 NUEVO: devolver lista actualizada
+                res.setContentType(ContentType.APPLICATION_JSON.toString());
+                FavoriteSites updatedFavorites = getUserFavorites(userId);
+                res.getWriter().write(updatedFavorites.toJSON());
+
+            } else {
+                String siteId = req.getParameter("siteId");
+                boolean pinned = BooleanUtils.toBoolean(req.getParameter("pinned"));
+                portalService.addPinnedSite(userId, siteId, pinned);
+
+                // 🔧 NUEVO: devolver lista actualizada también aquí
+                res.setContentType(ContentType.APPLICATION_JSON.toString());
+                FavoriteSites updatedFavorites = getUserFavorites(userId);
+                res.getWriter().write(updatedFavorites.toJSON());
+            }
+
+            return END;
 			} catch (Exception e) {
 				throw new PortalHandlerException(e);
 			}
